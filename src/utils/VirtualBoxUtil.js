@@ -16,6 +16,9 @@ var VirtualBox = {
     }
   },
   installed: function () {
+    if (util.isWindows() && !process.env.VBOX_INSTALL_PATH && !process.env.VBOX_MSI_INSTALL_PATH) {
+      return false;
+    }
     return fs.existsSync(this.command());
   },
   active: function () {
@@ -32,26 +35,8 @@ var VirtualBox = {
       return Promise.resolve(null);
     });
   },
-  poweroffall: function () {
-    return util.exec(this.command() + ' list runningvms | sed -E \'s/.*\\{(.*)\\}/\\1/\' | xargs -L1 -I {} ' + this.command() + ' controlvm {} poweroff');
-  },
   mountSharedDir: function (vmName, pathName, hostPath) {
     return util.exec([this.command(), 'sharedfolder', 'add', vmName, '--name', pathName, '--hostpath', hostPath, '--automount']);
-  },
-  killall: function () {
-    if (util.isWindows()) {
-      return this.poweroffall().then(() => {
-        return util.exec(['powershell.exe', '\"get-process VBox* | stop-process\"']);
-      }).catch(() => {});
-    } else {
-      return this.poweroffall().then(() => {
-        return util.exec(['pkill', 'VirtualBox']);
-      }).then(() => {
-        return util.exec(['pkill', 'VBox']);
-      }).catch(() => {
-
-      });
-    }
   },
   vmExists: function (name) {
     return util.exec([this.command(), 'showvminfo', name]).then(() => {

@@ -153,11 +153,12 @@ export default {
         break;
       } catch (error) {
         router.get().transitionTo('setup');
-        metrics.track('Setup Failed', {
+
+        let novtx = error.message.indexOf('This computer doesn\'t have VT-X/AMD-v enabled') !== -1;
+        metrics.track(novtx ? 'Setup Halted' : 'Setup Failed', {
           virtualBoxVersion,
           machineVersion
         });
-        setupServerActions.error({error});
 
         let message = error.message.split('\n');
         let lastLine = message.length > 1 ? message[message.length - 2] : 'Docker Machine encountered an error.';
@@ -169,6 +170,8 @@ export default {
           'Machine Version': machineVersion,
           groupingHash: machineVersion
         }, 'info');
+
+        setupServerActions.error({error: new Error(lastline)});
 
         this.clearTimers();
         await this.pause();

@@ -143,7 +143,7 @@ var DockerMachine = {
     if (util.isWindows()) {
       cmd = cmd || '';
       this.url(machineName).then(machineUrl => {
-        util.exec('start powershell.exe ' + cmd,
+        util.exec(['start', 'powershell.exe', cmd],
           {env: {
             'DOCKER_HOST': machineUrl,
             'DOCKER_CERT_PATH': path.join(util.home(), '.docker', 'machine', 'machines', machineName),
@@ -154,8 +154,9 @@ var DockerMachine = {
     } else if (util.isLinux()) {
       cmd = cmd || process.env.SHELL;
       var terminal = util.linuxTerminal();
-      if (terminal)
+      if (terminal) {
         util.exec(terminal.concat([cmd])).then(() => {});
+      }
     } else {
       cmd = cmd || process.env.SHELL;
       this.url(machineName).then(machineUrl => {
